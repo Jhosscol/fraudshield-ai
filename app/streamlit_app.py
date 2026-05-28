@@ -1,3 +1,4 @@
+import requests
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -99,3 +100,72 @@ with col_chart2:
         st.plotly_chart(fig2, use_container_width=True)
     else:
         st.write("Sin datos de dispositivos disponibles.")
+
+st.divider()
+
+st.header("🔍 Predicción de Fraude en Tiempo Real")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    transaction_amount = st.number_input("Monto de Transacción", min_value=0.0, value=5000.0)
+    customer_id = st.text_input("Customer ID", value="CUST100")
+    payment_method = st.selectbox(
+        "Método de Pago",
+        ["Credit Card", "Debit Card", "PayPal", "Bank Transfer"]
+    )
+    product_category = st.selectbox(
+        "Categoría",
+        ["Electronics", "Clothing", "Home", "Beauty"]
+    )
+    quantity = st.number_input("Cantidad", min_value=1, value=1)
+
+with col2:
+    customer_age = st.number_input("Edad Cliente", min_value=18, max_value=100, value=30)
+    customer_location = st.text_input("Ubicación", value="New York")
+    device_used = st.selectbox(
+        "Dispositivo",
+        ["Mobile", "Desktop", "Tablet"]
+    )
+    account_age_days = st.number_input("Edad de Cuenta (días)", min_value=0, value=365)
+    transaction_hour = st.slider("Hora de Transacción", 0, 23, 21)
+
+if st.button("🚨 Detectar Fraude"):
+
+    payload = {
+        "transaction_amount": transaction_amount,
+        "customer_id": customer_id,
+        "payment_method": payment_method,
+        "product_category": product_category,
+        "quantity": quantity,
+        "customer_age": customer_age,
+        "customer_location": customer_location,
+        "device_used": device_used,
+        "account_age_days": account_age_days,
+        "transaction_hour": transaction_hour
+    }
+
+    try:
+        response = requests.post(
+            "http://127.0.0.1:8000/predict",
+            json=payload
+        )
+
+        result = response.json()
+
+        fraud_prob = result["fraud_probability"]
+        risk_level = result["risk_level"]
+
+        st.success(f"Probabilidad de Fraude: {fraud_prob:.4f}")
+
+        if risk_level == "HIGH":
+            st.error(f"Nivel de Riesgo: {risk_level}")
+
+        elif risk_level == "MEDIUM":
+            st.warning(f"Nivel de Riesgo: {risk_level}")
+
+        else:
+            st.info(f"Nivel de Riesgo: {risk_level}")
+
+    except Exception as e:
+        st.error(f"Error conectando con API: {e}")
