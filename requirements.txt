@@ -27,3 +27,5 @@ urllib3==2.7.0
 uvicorn==0.48.0
 xgboost==3.2.0
 gdown
+streamlit
+plotly
