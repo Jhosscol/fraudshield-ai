@@ -95,7 +95,7 @@ if submit_button:
     with st.spinner("Consultando API de FraudShield AI..."):
         import requests
         
-        api_url = "http://localhost:8000/predict"
+        api_url = "https://fraudshield-ai-oc40.onrender.com/predict"
         payload = {
             "transaction_amount": float(input_data.get("Transaction Amount", 0.0)),
             "customer_id": str(input_data.get("Customer ID", "CUS-0000")),
