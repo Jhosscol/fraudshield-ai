@@ -16,20 +16,21 @@ MODELS_DIR = os.path.join(BASE_DIR, '..', 'app', 'models')
 MODEL_PATH    = os.path.join(MODELS_DIR, 'fraud_model.pkl')
 ENCODERS_PATH = os.path.join(MODELS_DIR, 'label_encoders.pkl')
 SCALER_PATH   = os.path.join(MODELS_DIR, 'scaler.pkl')
-SELECTOR_PATH = os.path.join(MODELS_DIR, 'feature_selector.pkl')
 
 # Google Drive IDs
 DRIVE_FILES = {
     MODEL_PATH:    "1uDbQAxBF7rtoJjM4lQ2VrSXEKMVcgeHL",
     ENCODERS_PATH: "1n-ubf_Hp_Qz-rRJROOwUhQ-cSsh_xG6p",
     SCALER_PATH:   "1xLSh-SADeGZQqigho1e6tRFNp_TOKQZc",
-    SELECTOR_PATH: "1f8sMnXblLGX7fh4OJQhOwbUHHyTIEi0K",
 }
+
+# Features seleccionadas (hardcodeadas para evitar cargar feature_selector.pkl de 1GB)
+# Customer ID, Transaction Amount, Customer Age, Customer Location, Account Age Days, Transaction Hour
+SELECTED_INDICES = [0, 1, 5, 6, 8, 9]
 
 model    = None
 encoders = None
 scaler   = None
-selector = None
 
 
 def download_if_missing(path: str, file_id: str):
@@ -46,21 +47,17 @@ def download_if_missing(path: str, file_id: str):
 
 @app.on_event("startup")
 def load_models():
-    global model, encoders, scaler, selector
+    global model, encoders, scaler
     try:
-        # Descargar modelos si no están presentes
         for path, file_id in DRIVE_FILES.items():
             download_if_missing(path, file_id)
 
-        # Cargar modelos
         with open(MODEL_PATH, 'rb') as f:
             model = pickle.load(f)
         with open(ENCODERS_PATH, 'rb') as f:
             encoders = pickle.load(f)
         with open(SCALER_PATH, 'rb') as f:
             scaler = pickle.load(f)
-        with open(SELECTOR_PATH, 'rb') as f:
-            selector = pickle.load(f)
 
         print("✓ Todos los modelos cargados correctamente.")
     except Exception as e:
@@ -95,15 +92,15 @@ def safe_encode(encoder, value):
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict_fraud(req: TransactionRequest):
-    if model is None or encoders is None or scaler is None or selector is None:
+    if model is None or encoders is None or scaler is None:
         raise HTTPException(status_code=503, detail="Los modelos no están cargados aún.")
 
     try:
-        customer_id_encoded = safe_encode(encoders['Customer ID'],        req.customer_id)
-        payment_encoded     = safe_encode(encoders['Payment Method'],     req.payment_method)
-        category_encoded    = safe_encode(encoders['Product Category'],   req.product_category)
-        location_encoded    = safe_encode(encoders['Customer Location'],  req.customer_location)
-        device_encoded      = safe_encode(encoders['Device Used'],        req.device_used)
+        customer_id_encoded = safe_encode(encoders['Customer ID'],       req.customer_id)
+        payment_encoded     = safe_encode(encoders['Payment Method'],    req.payment_method)
+        category_encoded    = safe_encode(encoders['Product Category'],  req.product_category)
+        location_encoded    = safe_encode(encoders['Customer Location'], req.customer_location)
+        device_encoded      = safe_encode(encoders['Device Used'],       req.device_used)
 
         now = datetime.now()
         transaction_year       = now.year
@@ -112,24 +109,24 @@ def predict_fraud(req: TransactionRequest):
         transaction_is_weekend = 1 if transaction_dayofweek >= 5 else 0
 
         features = np.array([[
-            customer_id_encoded,
-            req.transaction_amount,
-            payment_encoded,
-            category_encoded,
-            req.quantity,
-            req.customer_age,
-            location_encoded,
-            device_encoded,
-            req.account_age_days,
-            req.transaction_hour,
-            transaction_year,
-            transaction_month,
-            transaction_dayofweek,
-            transaction_is_weekend
+            customer_id_encoded,       # 0 - Customer ID
+            req.transaction_amount,    # 1 - Transaction Amount
+            payment_encoded,           # 2 - Payment Method
+            category_encoded,          # 3 - Product Category
+            req.quantity,              # 4 - Quantity
+            req.customer_age,          # 5 - Customer Age
+            location_encoded,          # 6 - Customer Location
+            device_encoded,            # 7 - Device Used
+            req.account_age_days,      # 8 - Account Age Days
+            req.transaction_hour,      # 9 - Transaction Hour
+            transaction_year,          # 10
+            transaction_month,         # 11
+            transaction_dayofweek,     # 12
+            transaction_is_weekend     # 13
         ]])
 
         scaled_features   = scaler.transform(features)
-        selected_features = selector.transform(scaled_features)
+        selected_features = scaled_features[:, SELECTED_INDICES]
         proba             = model.predict_proba(selected_features)[0]
         fraud_prob        = float(proba[1]) if len(proba) > 1 else float(proba[0])
 
