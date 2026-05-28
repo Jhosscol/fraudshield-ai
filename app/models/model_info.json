@@ -1,0 +1,69 @@
+{
+  "model_name": "XGBoost",
+  "version": "1.0.0",
+  "trained_at": "2026-05-27 22:30:08",
+  "dataset": "fraudulent-e-commerce-transactions",
+  "dataset_rows": 1472952,
+  "train_rows": 1178361,
+  "test_rows": 294591,
+  "all_features": [
+    "Customer ID",
+    "Transaction Amount",
+    "Payment Method",
+    "Product Category",
+    "Quantity",
+    "Customer Age",
+    "Customer Location",
+    "Device Used",
+    "Account Age Days",
+    "Transaction Hour",
+    "transaction_year",
+    "transaction_month",
+    "transaction_dayofweek",
+    "transaction_is_weekend"
+  ],
+  "selected_features": [
+    "Customer ID",
+    "Transaction Amount",
+    "Customer Age",
+    "Customer Location",
+    "Account Age Days",
+    "Transaction Hour"
+  ],
+  "dropped_features": [
+    "Payment Method",
+    "Product Category",
+    "Quantity",
+    "Device Used",
+    "transaction_year",
+    "transaction_month",
+    "transaction_dayofweek",
+    "transaction_is_weekend"
+  ],
+  "n_features_input": 14,
+  "n_features_model": 6,
+  "preprocessing_pipeline": [
+    "1. LabelEncoder  \u2192 models/label_encoders.pkl",
+    "2. StandardScaler \u2192 models/scaler.pkl",
+    "3. SMOTE/UnderSampler (solo en train)",
+    "4. SelectFromModel \u2192 models/feature_selector.pkl"
+  ],
+  "metrics": {
+    "f1_score": 0.3648,
+    "auc_roc": 0.811,
+    "accuracy": 0.9187,
+    "precision": 0.2999,
+    "recall": 0.4656,
+    "avg_precision": 0.3735
+  },
+  "best_params": {
+    "colsample_bytree": 0.8,
+    "learning_rate": 0.1,
+    "max_depth": 8,
+    "n_estimators": 300,
+    "subsample": 1.0
+  },
+  "threshold": 0.5,
+  "smote_applied": true,
+  "fraud_rate_train": 0.0501
+}
