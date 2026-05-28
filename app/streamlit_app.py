@@ -147,7 +147,7 @@ if st.button("🚨 Detectar Fraude"):
 
     try:
         response = requests.post(
-            "http://127.0.0.1:8000/predict",
+            "https://fraudshield-ai-oc40.onrender.com/predict",
             json=payload
         )
 
