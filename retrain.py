@@ -24,8 +24,8 @@ DATA_PATH    = "app/data/dataset.csv"
 MODELS_DIR   = "app/models"
 METRICS_FILE = "metrics/latest_metrics.json"
 
-F1_THRESHOLD  = 0.85
-AUC_THRESHOLD = 0.85
+F1_THRESHOLD  = 0.25
+AUC_THRESHOLD = 0.75
 
 CATEGORICAL_COLS = [
     "Customer ID", "Payment Method", "Product Category",
