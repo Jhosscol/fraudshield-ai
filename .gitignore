@@ -4,5 +4,7 @@ __pycache__/
 .env
 mlruns/
 
-*.pkl
+app/models/feature_selector.pkl
+app/models/label_encoders.pkl
+
 *.csv
