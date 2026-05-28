@@ -8,3 +8,4 @@ app/models/feature_selector.pkl
 app/models/label_encoders.pkl
 
 *.csv
+!app/data/dataset.csv
